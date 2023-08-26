@@ -7,34 +7,39 @@ const list = document.getElementById("list");
 const notes = [
     {
         text: "Починить проблему с отображением данных на главной странице.",
-        status: "inProgress",
+        done: false,
     },
     {
         text: "Разработать интерфейс для загрузки и скачивания файлов.",
-        status: "inProgress",
+        done: false,
     },
     {
         text: "Создать систему уведомлений для пользователей.",
-        status: "done",
+        done: true,
     },
 ];
 
 function renderNotes() {
-    for (const note of notes) {
-        generateNote(note);
+    list.textContent = "";
+    for (let i = 0; i < notes.length; i++) {
+        generateNote(notes[i], i);
     }
 }
 
-function generateNote(note) {
+function generateNote(note, index) {
     list.insertAdjacentHTML(
         "beforeend",
         `
         <li
-            class="list-group-item d-flex justify-content-between align-items-center"
+            class="list-group-item d-flex justify-content-between align-items-center" data-index="${index}"
         >
-            <span>${note.text}</span>
+            <span class="${note.done ? "text-decoration-line-through" : ""}">${
+            note.text
+        }</span>
             <span>
-                <span class="btn btn-small btn-success" data-action="confirm">&check;</span>
+                <span class="btn btn-small btn-${
+                    note.done ? "warning" : "success"
+                }" data-action="confirm">&check;</span>
                 <span class="btn btn-small btn-danger" data-action="delete">&times;</span>
             </span>
         </li>
@@ -44,9 +49,18 @@ function generateNote(note) {
 
 renderNotes();
 
+inputNote.addEventListener("keydown", function (event) {
+    if (event.key == "Enter") {
+        addNoteBtn.onclick();
+    }
+});
+
 addNoteBtn.onclick = function () {
     if (inputNote.value.length != 0) {
-        generateNote(inputNote.value);
+        const newNote = { text: inputNote.value, done: false };
+        notes.push(newNote);
+        renderNotes();
+        inputNote.value = "";
     }
 };
 
@@ -57,9 +71,16 @@ list.addEventListener("click", function (event) {
 
     if (!btn.closest("li")) return;
 
+    const currentIndex = Number(btn.closest("li").dataset.index);
+
     if (btn.dataset.action == "confirm") {
-        console.log("CONFIRM!");
+        notes[currentIndex].done = !notes[currentIndex].done;
+        renderNotes();
     } else if (btn.dataset.action == "delete") {
-        btn.closest("li").remove();
+        notes.splice(currentIndex, 1);
+        renderNotes();
+        if (notes.length === 0) {
+            list.insertAdjacentHTML("beforeend", "<p>Нет заметок</p>");
+        }
     }
 });
